@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "koran-teknologi"
+version = "0.1.0"
+description = "A tech blog aggregator that scrapes multiple tech blogs and delivers updates via Telegram"
+authors = ["Your Name <your.email@example.com>"]
+packages = [{include = "sources"}, {include = "channels"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+beautifulsoup4 = "^4.12.0"
+requests = "^2.31.0"
+python-telegram-bot = "^20.7"
+python-dotenv = "^1.0.0"
+schedule = "^1.2.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"
+isort = "^5.12.0"
+flake8 = "^6.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
