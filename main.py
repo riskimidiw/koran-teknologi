@@ -36,7 +36,7 @@ async def fetch_new_posts(
     elif since.tzinfo is None:
         since = since.replace(tzinfo=timezone.utc)
 
-    logger.info("Starting blog check...")
+    logger.info(f"Starting blog check since {since}...")
     all_posts = []
 
     for scraper in scrapers:
