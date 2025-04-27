@@ -1,4 +1,4 @@
-name: Daily Blog Check
+name: Cronjob Blog Check
 
 on:
   schedule:
