@@ -28,6 +28,7 @@ sources             # scrapping logic for multiple blog sources
   airbnb.py
   bytebytego.py
 channels            # adapter to supported external channels
-  telegram.py       
+  telegram.py    
 main.py             # orchestration logic
+Makefile            # makefile to setup, run, test, etc
 ```

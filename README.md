@@ -9,33 +9,83 @@ A Python-based tech blog aggregator that scrapes content from various engineerin
   - Uber Engineering
   - Airbnb Engineering
   - ByteByteGo
-
 - Sends updates via Telegram channel
-- Daily scheduled checks for new content
-- Asynchronous processing
+- Customizable time range for fetching posts
+- Supports dry-run mode for testing
+- Async/await for efficient network operations
 
 ## Setup
 
-1. Install dependencies:
+### Quick Setup
+
 ```bash
-poetry install
+make setup
 ```
 
-2. Configure environment variables:
-   - Copy `.env.template` to `.env`
-   - Add your Telegram bot token and channel ID
+This will:
+1. Check if Poetry is installed
+2. Install project dependencies
+3. Create a `.env` file from template if it doesn't exist
+4. Create necessary directories
 
-3. Run the application:
+## Usage
+
 ```bash
-poetry run python main.py
+# Show all available commands
+make help
+
+# Run blog checker (last 24 hours)
+make run
+
+# Check posts from last 3 days
+make run DAYS=3
+
+# Test mode - just print posts without sending
+make run DRY_RUN=1
+
+# Check last 7 days in test mode
+make run DAYS=7 DRY_RUN=1
+```
+
+### Docker Support
+
+```bash
+# Build Docker image
+make docker-build
+
+# Run with Docker
+make docker-run
+
+# Run with Docker and custom days
+make docker-run DAYS=7
 ```
 
 ## Development
 
-- Uses Poetry for dependency management
+Available make commands:
+
+```bash
+make install     # Install dependencies
+make test       # Run tests with coverage
+make check      # Run code quality checks
+make format     # Format code with black and isort
+make clean      # Clean up cache files
+```
+
+The project uses:
+- Poetry for dependency management
 - Black for code formatting
 - Flake8 for linting
 - isort for import sorting
+- MyPy for type checking
+- Pytest for testing with async support
+
+### CI/CD
+
+The project includes GitHub Actions workflows for:
+- Running tests and code quality checks on pull requests
+- Building and publishing Docker images on tag pushes
+- Daily scheduled blog checks (at midnight UTC)
 
 ## Adding New Sources
 

@@ -1,0 +1,47 @@
+name: Daily Blog Check
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Run at midnight UTC daily
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      days:
+        description: 'Number of days to look back for posts'
+        required: false
+        default: '1'
+        type: string
+
+jobs:
+  check-blogs:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: 1.5.1
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+
+    - name: Setup Chrome
+      uses: browser-actions/setup-chrome@v1
+
+    - name: Setup ChromeDriver
+      uses: nanasess/setup-chromedriver@v2
+    
+    - name: Install dependencies
+      run: poetry install --no-dev
+    
+    - name: Run blog check
+      env:
+        TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+        DAYS: ${{ github.event.inputs.days || '1' }}  # Default to 1 if not specified
+      run: make run DAYS=${DAYS}
