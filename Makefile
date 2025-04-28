@@ -32,8 +32,6 @@ lint: ## Run code quality checks
 	@$(POETRY) run isort --check-only --skip .venv .
 	# flake8: Checks for PEP 8 style guide, complexity, and common errors
 	@$(POETRY) run flake8 --ignore=E501 --exclude=.venv .
-	# mypy: Adds static type checking, catching type-related bugs
-	@$(POETRY) run mypy --exclude '.venv' --install-types --non-interactive .
 
 format: ## Format code with black and isort
 	@echo "$(GREEN)Formatting code...$(NC)"

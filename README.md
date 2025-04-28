@@ -64,8 +64,6 @@ The project uses:
 - Black for code formatting
 - Flake8 for linting
 - isort for import sorting
-- MyPy for type checking
-- Pytest for testing with async support
 
 ### CI/CD
 
