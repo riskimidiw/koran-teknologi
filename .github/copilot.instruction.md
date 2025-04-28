@@ -4,7 +4,7 @@ This app is created to scrap blog data from multiple websites and deliver it to 
 # Feature
 - Scrap multiple websites based on the given URL and fetch the latest data withing the config timerange
 - Deliver index consisting blog title, blog source, and date
-- Run this program periodically based on config
+- Run this program periodically based on the config
     - Config: Run Daily
 - Supported Channels:
     - Telegram

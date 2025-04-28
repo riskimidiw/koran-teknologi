@@ -26,13 +26,13 @@ install: ## Install project dependencies
 check: ## Run code quality checks
 	@echo "$(GREEN)Running code quality checks...$(NC)"
 	# Black: Formats code to a consistent style, no decisions needed
-	@$(POETRY) run black --check .
+	@$(POETRY) run black --check --exclude ".venv/" .
 	# isort: Specifically handles import sorting and organization
-	@$(POETRY) run isort --check-only .
+	@$(POETRY) run isort --check-only --skip .venv .
 	# flake8: Checks for PEP 8 style guide, complexity, and common errors
-	@$(POETRY) run flake8 --ignore=E501 .
+	@$(POETRY) run flake8 --ignore=E501 --exclude=.venv .
 	# mypy: Adds static type checking, catching type-related bugs
-	@$(POETRY) run mypy .
+	@$(POETRY) run mypy --exclude '.venv' .
 
 format: ## Format code with black and isort
 	@echo "$(GREEN)Formatting code...$(NC)"
