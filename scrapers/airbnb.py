@@ -1,9 +1,8 @@
 from datetime import datetime
 
-import requests
 from bs4 import BeautifulSoup
 
-from .base import BaseScraper, BlogPost
+from scrapers.base_scraper import BaseScraper, BlogPost
 
 
 class AirbnbScraper(BaseScraper):
@@ -34,23 +33,29 @@ class AirbnbScraper(BaseScraper):
                     link_elem = article.select_one("a[href*='/airbnb-engineering/']")
                     if not link_elem:
                         continue
-                        
-                    url = link_elem["href"].split("?")[0]  # Remove query parameters
-                    
+
+                    url = link_elem["href"]
+                    if isinstance(url, list):
+                        url = url[0]
+                    url = url.split("?")[0]  # Remove query parameters
+
                     date_elem = article.select_one("time")
                     if not date_elem:
                         continue
-                    
-                    date = datetime.fromisoformat(date_elem["datetime"])
 
-                    posts.append(
-                        BlogPost(
-                            title=title,
-                            url=url,
-                            date=date,
-                            source=self.source_name
-                        )
+                    date_str = date_elem["datetime"]
+                    if isinstance(date_str, list):
+                        date_str = date_str[0]
+                    # Convert ISO format with Z timezone to datetime
+                    iso_date = date_str.replace("Z", "+00:00")
+                    post = BlogPost(
+                        title=title,
+                        url=url,
+                        date=datetime.fromisoformat(iso_date),
+                        source=self.source_name,
                     )
+
+                    posts.append(post)
                 except (AttributeError, KeyError, ValueError) as e:
                     self.logger.warning(f"Error parsing article: {str(e)}")
                     continue

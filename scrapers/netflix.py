@@ -4,12 +4,10 @@ from datetime import datetime, timezone
 from typing import List
 
 import aiohttp
-import requests
 from bs4 import BeautifulSoup
 
-from utils.logger import setup_logger
-
-from .base import BaseScraper, BlogPost
+from scrapers.base_scraper import BaseScraper, BlogPost
+from utils.logger.logger import setup_logger
 
 logger = setup_logger("scraper.Netflix Tech Blog")
 

@@ -45,20 +45,6 @@ make run DRY_RUN=1
 
 # Check last 7 days in test mode
 make run DAYS=7 DRY_RUN=1
-```
-
-### Docker Support
-
-```bash
-# Build Docker image
-make docker-build
-
-# Run with Docker
-make docker-run
-
-# Run with Docker and custom days
-make docker-run DAYS=7
-```
 
 ## Development
 
@@ -91,7 +77,7 @@ The project includes GitHub Actions workflows for:
 
 To add a new blog source:
 
-1. Create a new file in `sources/` directory
+1. Create a new file in `scraper/` directory
 2. Implement the `BaseScraper` class
 3. Add the scraper to the list in `main.py`
 

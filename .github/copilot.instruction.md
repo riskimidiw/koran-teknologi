@@ -22,7 +22,7 @@ This app is created to scrap blog data from multiple websites and deliver it to 
 
 # Project Structure
 ```
-sources             # scrapping logic for multiple blog sources
+scrapers             # scrapping logic for multiple blog sources
   uber.py
   netflix.py
   airbnb.py

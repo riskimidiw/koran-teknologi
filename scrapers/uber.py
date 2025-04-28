@@ -1,10 +1,11 @@
 """Uber Engineering blog scraper implementation."""
 
+import zoneinfo
 from datetime import datetime
 
 from bs4 import BeautifulSoup
 
-from .base import BaseScraper, BlogPost
+from scrapers.base_scraper import BaseScraper, BlogPost
 
 
 class UberScraper(BaseScraper):
@@ -50,7 +51,9 @@ class UberScraper(BaseScraper):
                         url = "https://www.uber.com" + url
 
                     # Extract date from p tag with format "Month Day / Region"
-                    date_elem = article.find("p", class_=lambda x: x and "f5" in x.split())
+                    date_elem = article.find(
+                        "p", class_=lambda x: x and "f5" in x.split()
+                    )
                     if not date_elem:
                         continue
 
@@ -61,8 +64,12 @@ class UberScraper(BaseScraper):
                         try:
                             date = datetime.strptime(date_text, "%B %d, %Y")
                         except ValueError:
-                            current_year = datetime.now().year
-                            date = datetime.strptime(f"{date_text} {current_year}", "%B %d %Y")
+                            current_year = datetime.now(zoneinfo.ZoneInfo("UTC")).year
+                            date = datetime.strptime(
+                                f"{date_text} {current_year}", "%B %d %Y"
+                            )
+                        # Make datetime timezone-aware
+                        date = date.replace(tzinfo=zoneinfo.ZoneInfo("UTC"))
                     except ValueError:
                         self.logger.warning(f"Could not parse date: {date_text}")
                         continue

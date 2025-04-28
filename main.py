@@ -9,12 +9,12 @@ from typing import List, Optional
 from dotenv import load_dotenv
 
 from channels.telegram import TelegramChannel
-from sources.airbnb import AirbnbScraper
-from sources.base import BaseScraper, BlogPost
-from sources.bytebytego import ByteByteGoScraper
-from sources.netflix import NetflixScraper
-from sources.uber import UberScraper
-from utils.logger import setup_logger
+from scrapers.airbnb import AirbnbScraper
+from scrapers.base_scraper import BaseScraper, BlogPost
+from scrapers.bytebytego import ByteByteGoScraper
+from scrapers.netflix import NetflixScraper
+from scrapers.uber import UberScraper
+from utils.logger.logger import setup_logger
 
 logger = setup_logger(__name__)
 

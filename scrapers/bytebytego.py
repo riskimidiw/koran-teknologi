@@ -1,13 +1,14 @@
 """ByteByteGo blog scraper implementation."""
 
 from datetime import datetime
+
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from bs4 import BeautifulSoup
+from selenium.webdriver.support.ui import WebDriverWait
 
-from .base import BaseScraper, BlogPost
+from scrapers.base_scraper import BaseScraper, BlogPost
 
 
 class ByteByteGoScraper(BaseScraper):
@@ -24,28 +25,32 @@ class ByteByteGoScraper(BaseScraper):
         posts: list[BlogPost] = []
 
         options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        
+        options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+
         driver = webdriver.Chrome(options=options)
         wait = WebDriverWait(driver, 10)
-        
+
         try:
             driver.get(self.base_url)
-            
+
             # Handle popup if it appears
             try:
                 close_button = wait.until(
-                    EC.presence_of_element_located((By.CSS_SELECTOR, "button[data-testid='close-modal']"))
+                    EC.presence_of_element_located(
+                        (By.CSS_SELECTOR, "button[data-testid='close-modal']")
+                    )
                 )
                 close_button.click()
             except Exception as e:
                 self.logger.warning(f"No popup found or couldn't close it: {str(e)}")
 
             # Wait for articles to load
-            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "div[role='article']")))
-            
+            wait.until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, "div[role='article']"))
+            )
+
             # Get the page content
             content = driver.page_source
             soup = BeautifulSoup(content, "html.parser")
@@ -55,25 +60,33 @@ class ByteByteGoScraper(BaseScraper):
 
             for article in articles:
                 try:
-                    title_elem = article.select_one("a[data-testid='post-preview-title']")
+                    title_elem = article.select_one(
+                        "a[data-testid='post-preview-title']"
+                    )
                     if not title_elem:
                         continue
 
                     title = title_elem.text.strip()
                     url = title_elem["href"]
+                    if isinstance(url, list):
+                        url = url[0]
 
                     date_elem = article.select_one("time.date-rtYe1v")
                     if not date_elem or "datetime" not in date_elem.attrs:
                         raise ValueError("Article date not found")
 
-                    posts.append(
-                        BlogPost(
-                            title=title,
-                            url=url,
-                            date=datetime.fromisoformat(date_elem["datetime"]),
-                            source=self.source_name,
-                        )
+                    datetime_str = date_elem["datetime"]
+                    if isinstance(datetime_str, list):
+                        datetime_str = datetime_str[0]
+                    iso_date = datetime_str.replace("Z", "+00:00")
+
+                    post = BlogPost(
+                        title=title,
+                        url=url,
+                        date=datetime.fromisoformat(iso_date),
+                        source=self.source_name,
                     )
+                    posts.append(post)
                 except (AttributeError, KeyError, ValueError) as e:
                     self.logger.warning(f"Error parsing article: {str(e)}")
                     continue

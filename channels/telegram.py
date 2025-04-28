@@ -3,11 +3,10 @@
 import os
 from typing import List, Optional
 
-from telegram.ext import Application
-
 from telegram import Bot
-from sources.base import BlogPost
-from utils.logger import setup_logger
+
+from scrapers.base_scraper import BlogPost
+from utils.logger.logger import setup_logger
 
 logger = setup_logger(__name__)
 

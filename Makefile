@@ -3,6 +3,7 @@
 # Colors for pretty output
 GREEN := \033[0;32m
 BLUE := \033[0;34m
+RED := \033[0;31m
 NC := \033[0m # No Color
 
 # Python and Poetry settings
@@ -24,9 +25,13 @@ install: ## Install project dependencies
 
 check: ## Run code quality checks
 	@echo "$(GREEN)Running code quality checks...$(NC)"
+	# Black: Formats code to a consistent style, no decisions needed
 	@$(POETRY) run black --check .
+	# isort: Specifically handles import sorting and organization
 	@$(POETRY) run isort --check-only .
-	@$(POETRY) run flake8 .
+	# flake8: Checks for PEP 8 style guide, complexity, and common errors
+	@$(POETRY) run flake8 --ignore=E501 .
+	# mypy: Adds static type checking, catching type-related bugs
 	@$(POETRY) run mypy .
 
 format: ## Format code with black and isort
@@ -35,16 +40,31 @@ format: ## Format code with black and isort
 	@$(POETRY) run isort .
 
 setup: ## Initial project setup
-	@echo "$(GREEN)Setting up project...$(NC)"
+	@echo "$(GREEN)Setting up project...$(NC)" || (echo "$(RED)Poetry is not installed. Please install it first: https://python-poetry.org/docs/#installation$(NC)" && exit 1)
 	@if [ ! -f .env ]; then \
 		cp .env.template .env; \
-		echo "⚠️  Please update .env with your Telegram credentials"; \
+		echo "⚠️  Please update .env with your Telegram credentials"; \cho "⚠️  Please update .env with your Telegram credentials"; \
 	fi
 	@mkdir -p logs
 	@$(MAKE) install
 
-run: ## Run the blog checker (use DAYS=n for custom days, DRY_RUN=1 for dry run)
+run: ## Run the blog checker (use DAYS=n for custom days, DRY_RUN=1 for dry run)custom days, DRY_RUN=1 for dry run)
 	@echo "$(GREEN)Running blog checker...$(NC)"
 	@$(POETRY) run python main.py $(if $(DRY_RUN),--dry-run) --days $(DAYS)
 
-.DEFAULT_GOAL := help
+clean: ## Remove temporary files and build artifacts
+	@echo "$(GREEN)Cleaning project...$(NC)"
+	@find . -type d -name "__pycache__" -exec rm -rf {} +
+	@find . -type f -name "*.pyc" -delete
+	@find . -type f -name "*.pyo" -delete
+	@find . -type f -name "*.pyd" -delete
+	@find . -type f -name ".coverage" -delete
+	@find . -type d -name "*.egg-info" -exec rm -rf {} +
+	@find . -type d -name "*.egg" -exec rm -rf {} +
+	@find . -type d -name ".pytest_cache" -exec rm -rf {} +
+	@find . -type d -name ".mypy_cache" -exec rm -rf {} +
+	@find . -type d -name "build" -exec rm -rf {} +
+	@find . -type d -name "dist" -exec rm -rf {} +
+	@rm -rf .coverage coverage.xml htmlcov/
+
+.DEFAULT_GOAL := help.DEFAULT_GOAL := help

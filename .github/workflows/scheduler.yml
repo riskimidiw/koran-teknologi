@@ -1,4 +1,4 @@
-name: Cronjob Blog Check
+name: Blog Check Scheduler
 
 on:
   schedule:
