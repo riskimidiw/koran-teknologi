@@ -69,9 +69,8 @@ The project uses:
 ### CI/CD
 
 The project includes GitHub Actions workflows for:
-- Running tests and code quality checks on pull requests
-- Building and publishing Docker images on tag pushes
-- Daily scheduled blog checks (at midnight UTC)
+- Running code quality checks on pull requests
+- Configurable scheduled blog checks (at midnight UTC)
 
 ## Adding New Sources
 
