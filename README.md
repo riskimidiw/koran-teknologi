@@ -51,11 +51,12 @@ make run DAYS=7 DRY_RUN=1
 Available make commands:
 
 ```bash
-make install     # Install dependencies
-make test       # Run tests with coverage
-make check      # Run code quality checks
-make format     # Format code with black and isort
-make clean      # Clean up cache files
+check                 Run code quality checks
+clean                 Remove temporary files and build artifacts
+format                Format code with black and isort
+help                  Show this help message
+install               Install project dependencies
+run                   Run the blog checker (use DAYS=n for custom days, DRY_RUN=1 for dry run)
 ```
 
 The project uses:

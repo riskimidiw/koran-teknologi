@@ -48,7 +48,7 @@ setup: ## Initial project setup
 	@mkdir -p logs
 	@$(MAKE) install
 
-run: ## Run the blog checker (use DAYS=n for custom days, DRY_RUN=1 for dry run)custom days, DRY_RUN=1 for dry run)
+run: ## Run the blog checker (use DAYS=n for custom days, DRY_RUN=1 for dry run)
 	@echo "$(GREEN)Running blog checker...$(NC)"
 	@$(POETRY) run python main.py $(if $(DRY_RUN),--dry-run) --days $(DAYS)
 
