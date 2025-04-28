@@ -5,7 +5,7 @@ description = "A service that aggregates tech blog posts from various companies"
 authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 packages = [
-    { include = "sources" },
+    { include = "scrapers" },
     { include = "channels" },
     { include = "utils" }
 ]
