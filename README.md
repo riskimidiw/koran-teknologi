@@ -51,7 +51,7 @@ make run DAYS=7 DRY_RUN=1
 Available make commands:
 
 ```bash
-check                 Run code quality checks
+lint                 Run code quality checks
 clean                 Remove temporary files and build artifacts
 format                Format code with black and isort
 help                  Show this help message

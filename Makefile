@@ -22,8 +22,9 @@ install: ## Install project dependencies
 	@echo "$(GREEN)Installing dependencies...$(NC)"
 	@$(POETRY) install
 	@$(POETRY) run pip install -e .
+	@$(POETRY) run pip install types-requests
 
-check: ## Run code quality checks
+lint: ## Run code quality checks
 	@echo "$(GREEN)Running code quality checks...$(NC)"
 	# Black: Formats code to a consistent style, no decisions needed
 	@$(POETRY) run black --check --exclude ".venv/" .
@@ -32,7 +33,7 @@ check: ## Run code quality checks
 	# flake8: Checks for PEP 8 style guide, complexity, and common errors
 	@$(POETRY) run flake8 --ignore=E501 --exclude=.venv .
 	# mypy: Adds static type checking, catching type-related bugs
-	@$(POETRY) run mypy --exclude '.venv' .
+	@$(POETRY) run mypy --exclude '.venv' --install-types --non-interactive .
 
 format: ## Format code with black and isort
 	@echo "$(GREEN)Formatting code...$(NC)"
