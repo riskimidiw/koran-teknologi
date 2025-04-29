@@ -1,11 +1,9 @@
 name: Scheduler
 
 on:
-  push:
-    branches: [ main ]
   schedule:
-    - cron: "* * * * *"
-  workflow_dispatch:  # Allow manual trigger
+    - cron: "0/5 * * * *"
+  workflow_dispatch:
     inputs:
       days:
         description: 'Number of days to look back for posts'
