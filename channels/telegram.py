@@ -6,7 +6,7 @@ from typing import List, Optional
 from telegram import Bot
 
 from scrapers.base_scraper import BlogPost
-from utils.logger.logger import setup_logger
+from utils.logger import setup_logger
 
 logger = setup_logger(__name__)
 

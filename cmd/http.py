@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from services.koran_service import KoranService
-from utils.logger.logger import setup_logger
+from utils.logger import setup_logger
 
 logger = setup_logger(__name__)
 app = FastAPI(
