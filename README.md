@@ -12,7 +12,6 @@ A Python-based tech blog aggregator that scrapes content from various engineerin
 - Sends updates via Telegram channel
 - Customizable time range for fetching posts
 - Supports dry-run mode for testing
-- Async/await for efficient network operations
 
 ## Setup
 
@@ -30,6 +29,10 @@ This will:
 
 ## Usage
 
+The application can run in two modes: CLI and HTTP server.
+
+### CLI Mode
+
 ```bash
 # Show all available commands
 make help
@@ -45,18 +48,35 @@ make run DRY_RUN=1
 
 # Check last 7 days in test mode
 make run DAYS=7 DRY_RUN=1
+```
+
+### HTTP Server Mode
+
+```bash
+# Start HTTP server (default: http://0.0.0.0:8000)
+make run-http
+
+# Start server on custom host and port
+make run-http HTTP_HOST=127.0.0.1 HTTP_PORT=3000
+```
+
+Available endpoints:
+- POST `/send-posts` - Send new tech blog posts to Telegram
+- GET `/health` - Health check endpoint
 
 ## Development
 
 Available make commands:
 
 ```bash
-lint                 Run code quality checks
-clean                 Remove temporary files and build artifacts
-format                Format code with black and isort
 help                  Show this help message
 install               Install project dependencies
+lint                  Run code quality checks
+format                Format code with black and isort
+setup                 Initial project setup
 run                   Run the blog checker (use DAYS=n for custom days, DRY_RUN=1 for dry run)
+run-http              Run the HTTP server (use HTTP_HOST and HTTP_PORT for custom host/port)
+clean                 Remove temporary files and build artifacts
 ```
 
 The project uses:
