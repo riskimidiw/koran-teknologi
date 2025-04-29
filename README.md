@@ -93,11 +93,29 @@ The project includes GitHub Actions workflows for:
 
 ## Adding New Sources
 
-To add a new blog source:
+### Manual Method
 
 1. Create a new file in `scraper/` directory
 2. Implement the `BaseScraper` class
 3. Add the scraper to the list in `main.py`
+
+### Using AI Commands
+
+You can use GitHub Copilot to help implement a new web source scraper:
+
+1. Open the project in VS Code with GitHub Copilot enabled
+2. Create a new Python file in the `scraper/` directory
+3. Type a comment describing what you want to scrape, for example:
+   ```python
+   # Implement a scraper for Medium Engineering blog that extends BaseScraper
+   ```
+4. GitHub Copilot will suggest the implementation, including:
+   - Required imports
+   - Class structure extending BaseScraper
+   - Methods for parsing blog content
+   - Error handling
+
+The scraping just works if the implementation is correct. No guarantee it will work perfectly, but it's worth trying!
 
 ## License
 
