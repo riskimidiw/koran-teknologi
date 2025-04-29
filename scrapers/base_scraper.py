@@ -9,7 +9,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-from utils.logger.logger import setup_logger
+from utils.logger import setup_logger
 
 
 @dataclass

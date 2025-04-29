@@ -7,9 +7,6 @@ import aiohttp
 from bs4 import BeautifulSoup
 
 from scrapers.base_scraper import BaseScraper, BlogPost
-from utils.logger.logger import setup_logger
-
-logger = setup_logger("scraper.Netflix Tech Blog")
 
 
 class NetflixScraper(BaseScraper):
@@ -78,12 +75,12 @@ class NetflixScraper(BaseScraper):
                         )
 
                 except Exception as e:
-                    logger.warning(f"Error parsing article: {str(e)}")
+                    self.logger.warning(f"Error parsing article: {str(e)}")
                     continue
 
         except Exception as e:
-            logger.error(f"Error fetching Netflix Tech Blog: {str(e)}")
+            self.logger.error(f"Error fetching Netflix Tech Blog: {str(e)}")
             raise
 
-        logger.info(f"Successfully fetched {len(posts)} posts")
+        self.logger.info(f"Successfully fetched {len(posts)} posts")
         return posts
