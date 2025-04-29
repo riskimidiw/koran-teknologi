@@ -1,4 +1,4 @@
-.PHONY: help install test check format clean run
+.PHONY: help install test check format clean run run-http
 
 # Colors for pretty output
 GREEN := \033[0;32m
@@ -11,6 +11,8 @@ PYTHON := python3
 POETRY := poetry
 DAYS := 1
 DRY_RUN :=
+HTTP_HOST := 0.0.0.0
+HTTP_PORT := 8000
 
 help: ## Show this help message
 	@echo "Usage: make [target]"
@@ -42,14 +44,18 @@ setup: ## Initial project setup
 	@echo "$(GREEN)Setting up project...$(NC)" || (echo "$(RED)Poetry is not installed. Please install it first: https://python-poetry.org/docs/#installation$(NC)" && exit 1)
 	@if [ ! -f .env ]; then \
 		cp .env.template .env; \
-		echo "⚠️  Please update .env with your Telegram credentials"; \cho "⚠️  Please update .env with your Telegram credentials"; \
+		echo "⚠️  Please update .env with your Telegram credentials"; \
 	fi
 	@mkdir -p logs
 	@$(MAKE) install
 
-run: ## Run the blog checker (use DAYS=n for custom days, DRY_RUN=1 for dry run)
+run: ## Run the blog checker (use DAYS=n for custom days, DRY_RUN for dry run)
 	@echo "$(GREEN)Running blog checker...$(NC)"
-	@$(POETRY) run python main.py $(if $(DRY_RUN),--dry-run) --days $(DAYS)
+	@$(POETRY) run python main.py cli $(if $(DRY_RUN),--dry-run) --days $(DAYS)
+
+run-http: ## Run the HTTP server (use HTTP_HOST and HTTP_PORT for custom host/port)
+	@echo "$(GREEN)Starting HTTP server on $(HTTP_HOST):$(HTTP_PORT)...$(NC)"
+	@$(POETRY) run python main.py http --host $(HTTP_HOST) --port $(HTTP_PORT)
 
 clean: ## Remove temporary files and build artifacts
 	@echo "$(GREEN)Cleaning project...$(NC)"
@@ -66,4 +72,4 @@ clean: ## Remove temporary files and build artifacts
 	@find . -type d -name "dist" -exec rm -rf {} +
 	@rm -rf .coverage coverage.xml htmlcov/
 
-.DEFAULT_GOAL := help.DEFAULT_GOAL := help
+.DEFAULT_GOAL := help
