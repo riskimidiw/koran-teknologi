@@ -1,9 +1,9 @@
 """AWS Architecture blog scraper."""
 
-from datetime import datetime
 import re
+from datetime import datetime
+
 from bs4 import BeautifulSoup
-import requests
 
 from .base_scraper import BaseScraper, BlogPost
 
@@ -15,27 +15,27 @@ class AWSArchitectureScraper(BaseScraper):
         """Initialize AWS Architecture blog scraper."""
         super().__init__(
             base_url="https://aws.amazon.com/blogs/architecture/",
-            source_name="AWS Architecture"
+            source_name="AWS Architecture",
         )
 
     def _parse_date(self, date_str: str) -> datetime:
         """Parse date string and handle various timezone formats.
-        
+
         Args:
             date_str: ISO datetime string with timezone
-            
+
         Returns:
             datetime object with timezone info
         """
         # Handle various timezone formats (-07:00, -08:00, etc)
-        tz_pattern = r'(-\d{2}:\d{2})$'
+        tz_pattern = r"(-\d{2}:\d{2})$"
         match = re.search(tz_pattern, date_str)
         if match:
             tz = match.group(1)
             # Convert timezone format from -HH:MM to -HHMM for datetime.fromisoformat
-            clean_tz = tz.replace(':', '')
+            clean_tz = tz.replace(":", "")
             date_str = date_str.replace(tz, clean_tz)
-        
+
         return datetime.fromisoformat(date_str)
 
     async def fetch_latest_posts(self) -> list[BlogPost]:
@@ -51,7 +51,7 @@ class AWSArchitectureScraper(BaseScraper):
             }
             response = self.session.get(self.base_url, headers=headers)
             response.raise_for_status()
-            
+
             soup = BeautifulSoup(response.text, "html.parser")
             posts = []
 
@@ -61,16 +61,19 @@ class AWSArchitectureScraper(BaseScraper):
 
             for post_row in blog_rows:
                 try:
-                    # Try to find the article URL from both image and title columns
-                    img_col = post_row.find("div", class_="lb-col lb-mid-6 lb-tiny-24")
-                    content_col = post_row.find("div", class_="lb-col lb-mid-18 lb-tiny-24")
-                    
+                    # Try to find the article URL
+                    content_col = post_row.find(
+                        "div", class_="lb-col lb-mid-18 lb-tiny-24"
+                    )
+
                     if not content_col:
                         self.logger.debug("Skipping row - content column not found")
                         continue
 
                     # Get title and URL from the content column
-                    title_elem = content_col.find("h2", class_="lb-bold blog-post-title")
+                    title_elem = content_col.find(
+                        "h2", class_="lb-bold blog-post-title"
+                    )
                     if not title_elem:
                         self.logger.debug("Skipping row - title element not found")
                         continue
@@ -79,7 +82,7 @@ class AWSArchitectureScraper(BaseScraper):
                     if not title_link:
                         self.logger.debug("Skipping row - title link not found")
                         continue
-                    
+
                     title_span = title_link.find("span", property="name headline")
                     if not title_span:
                         self.logger.debug("Skipping row - title span not found")
@@ -99,15 +102,17 @@ class AWSArchitectureScraper(BaseScraper):
                     if not date_elem:
                         self.logger.debug(f"Skipping post '{title}' - date not found")
                         continue
-                    
+
                     date_str = date_elem["datetime"]
                     self.logger.debug(f"Raw date string: {date_str}")
-                    
+
                     try:
                         date = self._parse_date(date_str)
                         self.logger.debug(f"Parsed date: {date}")
                     except ValueError as e:
-                        self.logger.warning(f"Error parsing date '{date_str}': {str(e)}")
+                        self.logger.warning(
+                            f"Error parsing date '{date_str}': {str(e)}"
+                        )
                         continue
 
                     posts.append(

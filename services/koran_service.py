@@ -51,7 +51,7 @@ class KoranService:
                 posts = await scraper.fetch_latest_posts()
                 new_posts = [p for p in posts if p.date > since]
 
-                if (new_posts):
+                if new_posts:
                     logger.info(
                         f"Found {len(new_posts)} new posts from {scraper.source_name}"
                     )
