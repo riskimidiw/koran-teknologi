@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from channels.telegram import TelegramChannel
 from scrapers.airbnb import AirbnbScraper
+from scrapers.aws import AWSArchitectureScraper
 from scrapers.base_scraper import BlogPost
 from scrapers.bytebytego import ByteByteGoScraper
 from scrapers.netflix import NetflixScraper
@@ -23,6 +24,7 @@ class KoranService:
             NetflixScraper(),
             AirbnbScraper(),
             ByteByteGoScraper(),
+            AWSArchitectureScraper(),
         ]
         self.channel = TelegramChannel()
 
@@ -49,7 +51,7 @@ class KoranService:
                 posts = await scraper.fetch_latest_posts()
                 new_posts = [p for p in posts if p.date > since]
 
-                if new_posts:
+                if (new_posts):
                     logger.info(
                         f"Found {len(new_posts)} new posts from {scraper.source_name}"
                     )

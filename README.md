@@ -9,6 +9,7 @@ A Python-based tech blog aggregator that scrapes content from various engineerin
   - Uber Engineering
   - Airbnb Engineering
   - ByteByteGo
+  - AWS Architecture
 - Sends updates via Telegram channel
 - Customizable time range for fetching posts
 - Supports dry-run mode for testing
@@ -105,17 +106,61 @@ You can use GitHub Copilot to help implement a new web source scraper:
 
 1. Open the project in VS Code with GitHub Copilot enabled
 2. Create a new Python file in the `scraper/` directory
-3. Type a comment describing what you want to scrape, for example:
+3. Provide the following information in your comment:
    ```python
-   # Implement a scraper for Medium Engineering blog that extends BaseScraper
+   """
+   Implement a scraper for [Blog Name] that extends BaseScraper
+   
+   Source URL: [Full URL of the blog, e.g. https://blog.example.com]
+   
+   Sample HTML structure for a blog post:
+   <div class="post">
+     <h2 class="title"><a href="/post-url">Post Title</a></h2>
+     <div class="meta">
+       <time datetime="2025-05-10T10:00:00Z">May 10, 2025</time>
+     </div>
+   </div>
+   """
    ```
 4. GitHub Copilot will suggest the implementation, including:
    - Required imports
    - Class structure extending BaseScraper
-   - Methods for parsing blog content
-   - Error handling
+   - HTML parsing logic based on the provided structure
+   - Date parsing and timezone handling
+   - Error handling and logging
 
-The scraping just works if the implementation is correct. No guarantee it will work perfectly, but it's worth trying!
+For example, here's a full comment for implementing an AWS Architecture blog scraper:
+```python
+"""
+Implement a scraper for AWS Architecture blog that extends BaseScraper
+
+Source URL: https://aws.amazon.com/blogs/architecture/
+
+Sample HTML structure:
+<div class="lb-row lb-snap">
+  <div class="lb-col lb-mid-6 lb-tiny-24">
+    <a href="[post-url]"><img src="[image-url]"></a>
+  </div>
+  <div class="lb-col lb-mid-18 lb-tiny-24">
+    <h2 class="lb-bold blog-post-title">
+      <a href="[post-url]">
+        <span property="name headline">Post Title</span>
+      </a>
+    </h2>
+    <footer class="blog-post-meta">
+      <span>by <span property="author"><span property="name">Author Name</span></span></span>
+      <span>on <time property="datePublished" datetime="2025-04-21T10:08:07-07:00">21 APR 2025</time></span>
+    </footer>
+  </div>
+</div>
+"""
+```
+
+The scraping implementation will be tailored to your specific blog source, considering:
+- HTML element structure and class names
+- Date formats and timezones
+- Pagination if present
+- Error handling for missing elements
 
 ## License
 
