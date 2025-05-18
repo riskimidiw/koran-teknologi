@@ -10,6 +10,7 @@ A Python-based tech blog aggregator that scrapes content from various engineerin
   - Airbnb Engineering
   - ByteByteGo
   - AWS Architecture
+  - Lyft Engineering
 - Sends updates via Telegram channel
 - Customizable time range for fetching posts
 - Supports dry-run mode for testing

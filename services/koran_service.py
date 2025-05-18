@@ -8,6 +8,7 @@ from scrapers.airbnb import AirbnbScraper
 from scrapers.aws import AWSArchitectureScraper
 from scrapers.base_scraper import BlogPost
 from scrapers.bytebytego import ByteByteGoScraper
+from scrapers.lyft import LyftScraper
 from scrapers.netflix import NetflixScraper
 from scrapers.uber import UberScraper
 from utils.logger import setup_logger
@@ -25,6 +26,7 @@ class KoranService:
             AirbnbScraper(),
             ByteByteGoScraper(),
             AWSArchitectureScraper(),
+            LyftScraper(),
         ]
         self.channel = TelegramChannel()
 
