@@ -1,0 +1,41 @@
+# This workflow ensures the repository remains active by making a commit every month.
+# GitHub workflow will be disabled if there is no activity for 60 days.
+
+name: Monthly Auto Commit
+
+on:
+  schedule:
+    # Runs at 00:00 UTC on the 1st of every month
+    - cron: '0 0 1 * *'
+  workflow_dispatch:
+
+jobs:
+  auto-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Create or remove dummy file
+      id: dummy
+      run: |
+        if [ -f monthly-dummy.txt ]; then
+          echo "Dummy file exists, removing it."
+          rm monthly-dummy.txt
+          echo "action=removed" >> $GITHUB_OUTPUT
+        else
+          echo "Creating dummy file."
+          echo "Monthly auto-commit $(date +'%Y-%m-%d %H:%M:%S')" > monthly-dummy.txt
+          echo "action=created" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Commit and push if changed
+      if: steps.dummy.outputs.action != ''
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add monthly-dummy.txt || true
+        git commit -m "Monthly auto-commit: $(date +'%Y-%m-%d %H:%M:%S')" || exit 0
+        git push
