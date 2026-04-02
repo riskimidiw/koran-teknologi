@@ -1,137 +1,93 @@
-"""AWS Architecture blog scraper."""
+"""AWS Architecture blog scraper implementation."""
 
-import re
-from datetime import datetime
-
-from bs4 import BeautifulSoup
+import xml.etree.ElementTree as ET
+from typing import List
 
 from .base_scraper import BaseScraper, BlogPost
 
 
 class AWSArchitectureScraper(BaseScraper):
-    """Scraper for AWS Architecture Blog."""
+    """Scraper for the AWS Architecture blog."""
 
     def __init__(self) -> None:
-        """Initialize AWS Architecture blog scraper."""
+        """Initialize the AWS Architecture blog scraper."""
         super().__init__(
             base_url="https://aws.amazon.com/blogs/architecture/",
             source_name="AWS Architecture",
         )
 
-    def _parse_date(self, date_str: str) -> datetime:
-        """Parse date string and handle various timezone formats.
+    async def fetch_latest_posts(self) -> List[BlogPost]:
+        """Fetch latest blog posts from AWS Architecture using RSS feed.
 
-        Args:
-            date_str: ISO datetime string with timezone
-
-        Returns:
-            datetime object with timezone info
+        Uses RSS feed approach (most reliable - Skill.md recommendation).
         """
-        # Handle various timezone formats (-07:00, -08:00, etc)
-        tz_pattern = r"(-\d{2}:\d{2})$"
-        match = re.search(tz_pattern, date_str)
-        if match:
-            tz = match.group(1)
-            # Convert timezone format from -HH:MM to -HHMM for datetime.fromisoformat
-            clean_tz = tz.replace(":", "")
-            date_str = date_str.replace(tz, clean_tz)
+        posts = []
 
-        return datetime.fromisoformat(date_str)
-
-    async def fetch_latest_posts(self) -> list[BlogPost]:
-        """Fetch latest blog posts from AWS Architecture blog.
-
-        Returns:
-            A list of BlogPost objects representing the latest posts
-        """
         try:
+            # Use RSS feed endpoint
+            rss_url = "https://aws.amazon.com/blogs/architecture/feed/"
             headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
             }
-            response = self.session.get(self.base_url, headers=headers)
+
+            response = self.session.get(rss_url, headers=headers, timeout=10)
             response.raise_for_status()
 
-            soup = BeautifulSoup(response.text, "html.parser")
-            posts = []
+            # Parse RSS feed
+            root = ET.fromstring(response.content)
 
-            # Find all blog post rows
-            blog_rows = soup.find_all("div", class_="lb-row lb-snap")
-            self.logger.debug(f"Found {len(blog_rows)} blog post rows")
+            # Find all items in the RSS feed
+            items = root.findall(".//item")
+            self.logger.debug(f"Found {len(items)} items in AWS Architecture RSS feed")
 
-            for post_row in blog_rows:
+            for item in items:
                 try:
-                    # Try to find the article URL
-                    content_col = post_row.find(
-                        "div", class_="lb-col lb-mid-18 lb-tiny-24"
-                    )
+                    title_elem = item.find("title")
+                    link_elem = item.find("link")
+                    pub_date_elem = item.find("pubDate")
 
-                    if not content_col:
-                        self.logger.debug("Skipping row - content column not found")
+                    if title_elem is None or link_elem is None:
                         continue
 
-                    # Get title and URL from the content column
-                    title_elem = content_col.find(
-                        "h2", class_="lb-bold blog-post-title"
-                    )
-                    if not title_elem:
-                        self.logger.debug("Skipping row - title element not found")
+                    title = title_elem.text.strip() if title_elem.text else ""
+                    url = link_elem.text.strip() if link_elem.text else ""
+
+                    if not title or not url:
                         continue
 
-                    title_link = title_elem.find("a")
-                    if not title_link:
-                        self.logger.debug("Skipping row - title link not found")
-                        continue
+                    # Parse publication date
+                    pub_date = None
+                    if pub_date_elem is not None and pub_date_elem.text:
+                        try:
+                            # Parse RFC 2822 format
+                            from email.utils import parsedate_to_datetime
 
-                    title_span = title_link.find("span", property="name headline")
-                    if not title_span:
-                        self.logger.debug("Skipping row - title span not found")
-                        continue
+                            pub_date = parsedate_to_datetime(pub_date_elem.text)
+                        except Exception as e:
+                            self.logger.debug(
+                                f"Could not parse date: {pub_date_elem.text}"
+                            )
+                            continue
 
-                    title = title_span.text.strip()
-                    url = title_link["href"]
-                    self.logger.debug(f"Found post: {title}")
-
-                    # Get publication date
-                    footer = content_col.find("footer", class_="blog-post-meta")
-                    if not footer:
-                        self.logger.debug(f"Skipping post '{title}' - footer not found")
-                        continue
-
-                    date_elem = footer.find("time", property="datePublished")
-                    if not date_elem:
-                        self.logger.debug(f"Skipping post '{title}' - date not found")
-                        continue
-
-                    date_str = date_elem["datetime"]
-                    self.logger.debug(f"Raw date string: {date_str}")
-
-                    try:
-                        date = self._parse_date(date_str)
-                        self.logger.debug(f"Parsed date: {date}")
-                    except ValueError as e:
-                        self.logger.warning(
-                            f"Error parsing date '{date_str}': {str(e)}"
-                        )
+                    if pub_date is None:
                         continue
 
                     posts.append(
                         BlogPost(
                             title=title,
                             url=url,
-                            date=date,
+                            date=pub_date,
                             source=self.source_name,
                         )
                     )
-                    self.logger.debug(f"Successfully added post: {title} ({date})")
-
                 except Exception as e:
-                    self.logger.warning(f"Error parsing blog post: {str(e)}")
+                    self.logger.warning(f"Error parsing AWS RSS item: {str(e)}")
                     continue
 
-            self.logger.info(f"Successfully fetched {len(posts)} posts")
-            return posts
+            self.logger.info(f"Successfully fetched {len(posts)} posts from AWS Architecture")
 
         except Exception as e:
-            self.logger.error(f"Error fetching AWS Architecture blog posts: {str(e)}")
-            return []
+            self.logger.error(f"Error fetching AWS Architecture posts: {str(e)}")
+            raise
+
+        return posts

@@ -7,3 +7,4 @@ dist/
 *.egg-info/
 logs/
 *.log
+.claude/scraper-ops-workspace/

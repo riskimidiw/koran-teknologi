@@ -1,9 +1,13 @@
 """Uber Engineering blog scraper implementation."""
 
-import zoneinfo
-from datetime import datetime
+from datetime import datetime, timezone
+from typing import List
 
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 from scrapers.base_scraper import BaseScraper, BlogPost
 
@@ -14,82 +18,134 @@ class UberScraper(BaseScraper):
     def __init__(self) -> None:
         """Initialize the Uber blog scraper."""
         super().__init__(
-            base_url="https://eng.uber.com",
+            base_url="https://eng.uber.com/",
             source_name="Uber Engineering",
         )
 
-    async def fetch_latest_posts(self) -> list[BlogPost]:
-        """Fetch latest blog posts from Uber Engineering."""
-        posts: list[BlogPost] = []
+    async def fetch_latest_posts(self) -> List[BlogPost]:
+        """Fetch latest blog posts from Uber Engineering using Selenium.
+
+        Note: Uber's engineering blog is a JavaScript-heavy site, so we use
+        Selenium with a headless Chrome browser to render the page dynamically.
+        """
+        posts: List[BlogPost] = []
+
+        options = webdriver.ChromeOptions()
+        options.add_argument("--headless=new")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+
+        driver = webdriver.Chrome(options=options)
+        wait = WebDriverWait(driver, 15)
 
         try:
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-                "Accept-Language": "en-US,en;q=0.9",
-            }
-            response = self.session.get(self.base_url, headers=headers)
-            response.raise_for_status()
-            soup = BeautifulSoup(response.text, "html.parser")
+            driver.get(self.base_url)
+            self.logger.info(f"Navigated to {self.base_url}")
 
-            # Find all article cards
-            articles = soup.find_all("a", attrs={"data-baseweb": "card"})
-            self.logger.debug(f"Found {len(articles)} articles")
+            # Wait for article cards to be present
+            wait.until(
+                EC.presence_of_all_elements_located(
+                    (By.CSS_SELECTOR, "a[href*='blog/']")
+                )
+            )
 
-            for article in articles:
+            # Get the rendered page content
+            content = driver.page_source
+            soup = BeautifulSoup(content, "html.parser")
+
+            # Find all article cards - look for divs that contain article links with dates
+            for link in soup.find_all("a", href=True):
                 try:
-                    # Extract title from h2 tag
-                    title_elem = article.find("h2")
-                    if not title_elem:
+                    href = link.get("href", "")
+
+                    # Filter for blog post URLs
+                    if not href or "/blog/" not in href:
+                        continue
+                    if not href.startswith("http"):
+                        href = f"https://www.uber.com{href}"
+
+                    title = link.get_text(strip=True)
+                    if not title or len(title) < 10:
                         continue
 
-                    # Get URL from article card link and clean it
-                    url = article["href"]
-                    if "?" in url:
-                        url = url.split("?")[0]  # Remove tracking parameters
-                    if not url.startswith("http"):
-                        url = "https://www.uber.com" + url
+                    # Find the parent container and look for date
+                    container = link.find_parent("div")
+                    date_elem = None
 
-                    # Extract date from p tag with format "Month Day / Region"
-                    date_elem = article.find(
-                        "p", class_=lambda x: x and "f5" in x.split()
-                    )
-                    if not date_elem:
-                        continue
-
-                    title = title_elem.text.strip()
-                    date_text = date_elem.text.split("/")[0].strip()
-                    try:
-                        # Try parsing with year if present, otherwise add current year
-                        try:
-                            date = datetime.strptime(date_text, "%B %d, %Y")
-                        except ValueError:
-                            current_year = datetime.now(zoneinfo.ZoneInfo("UTC")).year
-                            date = datetime.strptime(
-                                f"{date_text} {current_year}", "%B %d %Y"
+                    # Search up the tree for a date element
+                    while container and not date_elem:
+                        date_elem = container.find(
+                            lambda tag: tag.name == "div"
+                            and (
+                                any(
+                                    month in tag.get_text()
+                                    for month in [
+                                        "January",
+                                        "February",
+                                        "March",
+                                        "April",
+                                        "May",
+                                        "June",
+                                        "July",
+                                        "August",
+                                        "September",
+                                        "October",
+                                        "November",
+                                        "December",
+                                    ]
+                                )
+                                or any(
+                                    f"{i} " in tag.get_text()
+                                    for i in range(1, 32)
+                                )
                             )
-                        # Make datetime timezone-aware
-                        date = date.replace(tzinfo=zoneinfo.ZoneInfo("UTC"))
+                        )
+                        container = container.find_parent("div")
+
+                    if not date_elem:
+                        self.logger.debug(f"No date found for: {title[:40]}")
+                        continue
+
+                    date_str = date_elem.get_text(strip=True)
+                    try:
+                        # Parse dates like "March 11, 2026" and make timezone-aware (UTC)
+                        pub_date = datetime.strptime(date_str, "%B %d, %Y").replace(
+                            tzinfo=timezone.utc
+                        )
                     except ValueError:
-                        self.logger.warning(f"Could not parse date: {date_text}")
+                        self.logger.debug(f"Could not parse date: {date_str}")
                         continue
 
                     posts.append(
                         BlogPost(
                             title=title,
-                            url=url,
-                            date=date,
+                            url=href,
+                            date=pub_date,
                             source=self.source_name,
                         )
                     )
+                    self.logger.debug(f"Found post: {title}")
+
                 except (AttributeError, KeyError, ValueError) as e:
-                    self.logger.warning(f"Error parsing article: {str(e)}")
+                    self.logger.debug(f"Error parsing article: {str(e)}")
                     continue
 
-            self.logger.info(f"Successfully fetched {len(posts)} posts")
+            # Remove duplicates based on URL
+            unique_posts = {}
+            for post in posts:
+                if post.url not in unique_posts:
+                    unique_posts[post.url] = post
+
+            posts = list(unique_posts.values())
+
+            self.logger.info(
+                f"Successfully fetched {len(posts)} posts from Uber Engineering"
+            )
 
         except Exception as e:
-            self.logger.error(f"Error fetching posts: {str(e)}")
+            self.logger.error(f"Error fetching Uber Engineering posts: {str(e)}")
             raise
+        finally:
+            driver.quit()
 
         return posts

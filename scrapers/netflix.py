@@ -1,10 +1,8 @@
 """Netflix Tech Blog scraper."""
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import List
-
-import aiohttp
-from bs4 import BeautifulSoup
+import xml.etree.ElementTree as ET
 
 from scrapers.base_scraper import BaseScraper, BlogPost
 
@@ -18,69 +16,73 @@ class NetflixScraper(BaseScraper):
             base_url="https://netflixtechblog.com/",
             source_name="Netflix Tech Blog",
         )
-        self._session = None
-
-    def get_session(self):
-        """Get or create an aiohttp session."""
-        if self._session is None:
-            self._session = aiohttp.ClientSession()
-        return self._session
 
     async def fetch_latest_posts(self) -> List[BlogPost]:
-        """Fetch the latest blog posts from Netflix Tech Blog."""
+        """Fetch the latest blog posts from Netflix Tech Blog using RSS."""
         posts = []
 
         try:
-            async with self.get_session() as session:
-                async with session.get(self.base_url) as response:
-                    response.raise_for_status()
-                    html = await response.text()
-
-            soup = BeautifulSoup(html, "html.parser")
-            articles = soup.find_all("div", class_="u-xs-size12of12")
-
-            for article in articles:
+            # Use RSS feed
+            rss_url = "https://netflixtechblog.com/feed"
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            }
+            
+            response = self.session.get(rss_url, headers=headers, timeout=10, verify=False)
+            response.raise_for_status()
+            
+            # Parse RSS feed
+            root = ET.fromstring(response.content)
+            
+            # Find all items in the RSS feed
+            items = root.findall('.//item')
+            self.logger.debug(f"Found {len(items)} items in Netflix RSS feed")
+            
+            for item in items:
                 try:
-                    # Find title from h3 element
-                    title_elem = article.find("h3", class_="u-contentSansBold")
-                    if not title_elem:
+                    title_elem = item.find('title')
+                    link_elem = item.find('link')
+                    pub_date_elem = item.find('pubDate')
+                    
+                    if title_elem is None or link_elem is None:
                         continue
-                    title = title_elem.get_text().strip()
-
-                    # Find link from first anchor tag
-                    link_elem = article.find("a", href=True)
-                    if link_elem:
-                        link = link_elem.get("href")
-                        if "?" in link:
-                            link = link.split("?")[0]
-
-                    # Find date from time element
-                    date_elem = article.find("time")
-                    if date_elem and date_elem.get("datetime"):
-                        # Parse ISO format date and ensure it's timezone-aware
-                        date_str = date_elem["datetime"]
-                        if not date_str.endswith("Z"):
-                            date_str += "Z"
-                        date = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
-                        date = date.replace(tzinfo=timezone.utc)
-
-                    if title and link and date:
-                        posts.append(
-                            BlogPost(
-                                title=title,
-                                url=link,
-                                date=date,
-                                source=self.source_name,
-                            )
+                    
+                    title = title_elem.text.strip() if title_elem.text else ''
+                    url = link_elem.text.strip() if link_elem.text else ''
+                    
+                    if not title or not url:
+                        continue
+                    
+                    # Parse publication date
+                    pub_date = None
+                    if pub_date_elem is not None and pub_date_elem.text:
+                        try:
+                            # Parse RFC 2822 format
+                            from email.utils import parsedate_to_datetime
+                            pub_date = parsedate_to_datetime(pub_date_elem.text)
+                        except Exception as e:
+                            self.logger.debug(f"Could not parse date: {pub_date_elem.text}")
+                            continue
+                    
+                    if pub_date is None:
+                        continue
+                    
+                    posts.append(
+                        BlogPost(
+                            title=title,
+                            url=url,
+                            date=pub_date,
+                            source=self.source_name,
                         )
-
+                    )
                 except Exception as e:
-                    self.logger.warning(f"Error parsing article: {str(e)}")
+                    self.logger.warning(f"Error parsing Netflix RSS item: {str(e)}")
                     continue
+            
+            self.logger.info(f"Successfully fetched {len(posts)} posts")
 
         except Exception as e:
             self.logger.error(f"Error fetching Netflix Tech Blog: {str(e)}")
             raise
 
-        self.logger.info(f"Successfully fetched {len(posts)} posts")
         return posts

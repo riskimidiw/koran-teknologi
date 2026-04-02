@@ -1,0 +1,23 @@
+{
+  "skill_name": "scraper-ops",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We need to add support for AWS Architecture blog. The blog is at https://aws.amazon.com/blogs/architecture/. Can you create a new scraper for it? After implementing it, test it and make sure it returns posts. Let me know if you hit any issues.",
+      "expected_output": "A complete scraper implementation in scrapers/aws.py that successfully fetches posts from the AWS Architecture blog, integrated into KoranService, and verified to return > 0 posts",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "The Uber scraper seems to be broken - it was working before but now it's returning 0 posts. Can you debug it and figure out what went wrong? Run a test to confirm it's actually broken, identify the root cause, fix it, and verify the fix works.",
+      "expected_output": "Analysis of what's broken in the Uber scraper, the root cause identified, the fix implemented, and test output showing > 0 posts being returned",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Can you add a scraper for Anthropic's research blog at https://www.anthropic.com/research? This is a new source we want to track. Figure out the best way to scrape it (RSS vs HTML parsing vs Selenium), implement it, test it thoroughly, and integrate it into the service.",
+      "expected_output": "A new scraper implementation in scrapers/anthropic.py with intelligent detection of the best scraping method, > 0 posts returned in testing, and confirmation of integration with KoranService",
+      "files": []
+    }
+  ]
+}

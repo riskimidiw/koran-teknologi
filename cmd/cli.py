@@ -35,15 +35,11 @@ async def run_cli(days: int = 1, dry_run: bool = False) -> None:
             return
 
         logger.info("Starting Koran Teknologi CLI...")
-        service = KoranService()
+        service = KoranService(dry_run=dry_run)
         since = datetime.now() - timedelta(days=days)
 
         posts = await service.fetch_new_posts(since=since)
-
-        if dry_run:
-            await service.print_posts(posts)
-        else:
-            await service.send_posts(posts)
+        await service.send_posts(posts)
 
     except KeyboardInterrupt:
         logger.info("Interrupted by user")

@@ -5,9 +5,12 @@ from typing import List, Optional
 
 from channels.telegram import TelegramChannel
 from scrapers.airbnb import AirbnbScraper
+from scrapers.anthropic import AnthropicScraper
 from scrapers.aws import AWSArchitectureScraper
 from scrapers.base_scraper import BlogPost
 from scrapers.bytebytego import ByteByteGoScraper
+from scrapers.github import GitHubAIScraper
+from scrapers.google_research import GoogleResearchScraper
 from scrapers.lyft import LyftScraper
 from scrapers.netflix import NetflixScraper
 from scrapers.uber import UberScraper
@@ -19,7 +22,7 @@ logger = setup_logger(__name__)
 class KoranService:
     """Service class that orchestrates blog fetching and distribution."""
 
-    def __init__(self):
+    def __init__(self, dry_run: bool = False):
         self.scrapers = [
             UberScraper(),
             NetflixScraper(),
@@ -27,8 +30,12 @@ class KoranService:
             ByteByteGoScraper(),
             AWSArchitectureScraper(),
             LyftScraper(),
+            AnthropicScraper(),
+            GitHubAIScraper(),
+            GoogleResearchScraper(),
         ]
-        self.channel = TelegramChannel()
+        self.channel = TelegramChannel(dry_run=dry_run)
+        self.dry_run = dry_run
 
     async def fetch_new_posts(self, since: Optional[datetime] = None) -> List[BlogPost]:
         """Fetch new posts from all configured scrapers.
@@ -71,6 +78,8 @@ class KoranService:
     async def send_posts(self, posts: List[BlogPost]) -> None:
         """Send posts to the configured notification channel.
 
+        In dry-run mode, messages are printed instead of sent.
+
         Args:
             posts: List of posts to send
         """
@@ -79,26 +88,7 @@ class KoranService:
             return
 
         try:
-            logger.info(f"Sending {len(posts)} new posts to Telegram")
+            logger.info(f"Processing {len(posts)} new posts")
             await self.channel.send_posts(posts)
-            logger.info("Successfully sent posts to Telegram")
         except Exception as e:
-            logger.error(f"Error sending posts to Telegram: {str(e)}")
-
-    @staticmethod
-    async def print_posts(posts: List[BlogPost]) -> None:
-        """Print posts to console in a readable format.
-
-        Args:
-            posts: List of posts to print
-        """
-        if not posts:
-            print("No new posts found")
-            return
-
-        print(f"\nFound {len(posts)} new posts:\n")
-        for post in posts:
-            print(f"📝 {post.title}")
-            print(f"📚 Source: {post.source}")
-            print(f"📅 Date: {post.date.strftime('%Y-%m-%d')}")
-            print(f"🔗 {post.url}\n")
+            logger.error(f"Error processing posts: {str(e)}")

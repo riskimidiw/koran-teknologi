@@ -1,12 +1,15 @@
 """Main entry point for Koran Teknologi."""
 
+from dotenv import load_dotenv
+
+# Load environment variables BEFORE any other imports
+load_dotenv()
+
 import argparse
 import asyncio
 import sys
 from cmd.cli import run_cli
 from cmd.http import run_http
-
-from dotenv import load_dotenv
 
 from utils.logger import setup_logger
 
@@ -68,7 +71,6 @@ async def run_async_cli(days: int, dry_run: bool) -> int:
 def main() -> int:
     """Main entry point for the application."""
     try:
-        load_dotenv()
         args = parse_command()
 
         if args.command == "cli":
