@@ -1,34 +1,158 @@
-# Project Overview
-This app is created to scrap blog data from multiple websites and deliver it to external channels periodically
+---
+name: koran-teknologi
+description: "Guidance for Koran Teknologi: a tech blog aggregator that scrapes engineering blogs and delivers updates via Telegram. Provides architecture overview, development commands, scraper implementation patterns, and best practices."
+applyTo: "**/*.py"
+---
 
-# Feature
-- Scrap multiple websites based on the given URL and fetch the latest data withing the config timerange
-- Deliver index consisting blog title, blog source, and date
-- Run this program periodically based on the config
-    - Config: Run Daily
-- Supported Channels:
-    - Telegram
-- Supported Blog Sources:
-    - Uber Engineering: https://www.uber.com/en-ID/blog/engineering/
-    - Netflix Tech Blog: https://netflixtechblog.com/
-    - Airbnb Engineering: https://medium.com/airbnb-engineering/
-    - ByteByteGo: https://blog.bytebytego.com/
+# Koran Teknologi — Copilot Instructions
 
-# Tech Stack
-- Programming Language: Python3
-- Dependency Management: Poetry
-- CronJob: Github Action
-- CI/CD: Github Action
+## Project Overview
 
-# Project Structure
+**Koran Teknologi** is a tech blog aggregator that scrapes content from multiple engineering blogs (Netflix, Uber, Airbnb, AWS, Lyft, ByteByteGo, Anthropic, GitHub, Google Research) and delivers updates to a Telegram channel. The application runs in two modes:
+- **CLI mode**: Scheduled jobs for periodic fetching
+- **HTTP server mode**: FastAPI app for webhook-based triggers
+
+## Architecture
+
+The codebase follows a clean separation of concerns:
+
+### Core Layers
+
+**Scrapers (`scrapers/`)**: Each blog source has its own scraper class extending `BaseScraper`.
+- Fetch HTML from blog source
+- Parse blog posts using BeautifulSoup, RSS parsing, or Selenium (for JS-heavy sites)
+- Extract title, URL, and publication date
+- Return `BlogPost` dataclass instances
+- Implement retry logic and HTTP session management in `base_scraper.py`
+- **All scrapers must implement**: `async def fetch_latest_posts() -> list[BlogPost]`
+
+**Channels (`channels/`)**: Adapters for delivery methods. The `TelegramChannel` class:
+- Groups posts by date for readability
+- Formats messages with markdown and emoji icons per source
+- Supports dry-run mode for testing
+- Handles async message sending
+- `SOURCE_EMOJIS` mapping in `telegram.py` controls visual distinction — add entries when adding new scrapers
+
+**Services (`services/`)**: Business orchestration layer (`KoranService`):
+- Aggregates all scraper instances
+- Filters posts within a time window
+- Coordinates with the Telegram channel
+- Manages the full workflow
+
+**Commands (`cmd/`)**: Entry points for different execution modes:
+- `cli.py`: CLI mode — fetches posts and sends them
+- `http.py`: HTTP server mode — FastAPI app with endpoints for manual triggering
+
+### Data Flow
+
+1. CLI/HTTP server triggers `KoranService.fetch_new_posts(since: datetime)`
+2. Service iterates through all scraper instances and calls `fetch_latest_posts()`
+3. Posts from all scrapers are aggregated and filtered by date
+4. `KoranService.send_posts()` groups posts and sends them via Telegram
+5. Dry-run mode short-circuits the Telegram send and prints instead
+
+## Development Commands
+
+All commands use `make` with Poetry for dependency management:
+
+```bash
+# Initial setup (one-time)
+make setup        # Creates .env from template, installs dependencies
+
+# Development
+make install      # Install/update all dependencies
+make lint         # Run quality checks (black, isort, flake8)
+make format       # Auto-format code with black and isort
+make clean        # Remove build artifacts and cache
+
+# Running the application
+make run          # Fetch from last 24 hours (DAYS=3 for 3 days)
+make run DRY_RUN=1 DAYS=1  # Validate without sending to Telegram
+make run-http     # Start HTTP server on localhost:8000
 ```
-scrapers             # scrapping logic for multiple blog sources
-  uber.py
-  netflix.py
-  airbnb.py
-  bytebytego.py
-channels            # adapter to supported external channels
-  telegram.py    
-main.py             # orchestration logic
-Makefile            # makefile to setup, run, test, etc
+
+## Adding New Blog Scrapers
+
+When adding a new blog scraper:
+
+1. **Create a new file** in `scrapers/` (e.g., `scrapers/example_blog.py`)
+2. **Extend `BaseScraper`** and implement `async def fetch_latest_posts() -> list[BlogPost]`
+3. **Register the scraper** in `services/koran_service.py` by instantiating it in the service constructor
+4. **Update SOURCE_EMOJIS** in `channels/telegram.py` with an emoji for the new source
+5. The scraper will automatically be included in post fetching
+
+**Scraper Implementation Approaches** (in order of preference):
+- **RSS feeds** (`/feed` endpoints) — Most reliable; use `xml.etree.ElementTree` with `parsedate_to_datetime` for dates
+- **HTML parsing** — Use BeautifulSoup; probe with curl first to find CSS selectors
+- **Selenium** — Last resort for JS-heavy sites; use headless Chrome with `--headless=new`, `--no-sandbox`, `--disable-dev-shm-usage`
+
+**Before implementing:** Probe the blog with curl to decide the best approach:
+```bash
+curl -s -I "https://example.com/blog" -H "User-Agent: Mozilla/5.0" | head -20
+curl -s "https://example.com/blog" -H "User-Agent: Mozilla/5.0" | head -500
+curl -s "https://example.com/feed" -H "User-Agent: Mozilla/5.0" | head -50
 ```
+
+**Key Implementation Details**:
+- Parse dates consistently and handle timezones (RFC 2822 from RSS via `parsedate_to_datetime`)
+- Log errors and recoverable issues via `self.logger`
+- Raise exceptions on fetch failures so `KoranService` can handle them (don't silently return empty lists)
+- HTTP session with retries is provided by the base class
+
+## Environment Configuration
+
+Required environment variables (set in `.env`):
+- `TELEGRAM_BOT_TOKEN`: Telegram bot API token
+- `TELEGRAM_CHANNEL_ID`: Target Telegram channel ID
+
+The `.env` file is created from `.env.template` during `make setup`. Never commit `.env` with real credentials.
+
+## Testing
+
+Test framework setup in `pyproject.toml`:
+- Uses pytest with asyncio support
+- Tests should be in `tests/` directory following `test_*.py` pattern
+- Async tests work natively with `pytest-asyncio`
+
+**Quick scraper validation** (for testing individual scrapers):
+```bash
+python3 -c "
+import asyncio
+from scrapers.[module] import [Scraper]
+
+async def test():
+    scraper = [Scraper]()
+    posts = await scraper.fetch_latest_posts()
+    print(f'Posts: {len(posts)}')
+    if posts:
+        for post in posts[:3]:
+            print(f'  - {post.title[:60]} ({post.date.strftime(\"%Y-%m-%d\")})')
+
+asyncio.run(test())
+"
+```
+
+**When a scraper returns 0 posts:**
+1. Run scraper test (see Quick scraper validation above) to confirm the issue
+2. Use curl to probe the blog: `curl -s https://[blog]/ -H "User-Agent: Mozilla/5.0" | head -500`
+3. Identify root cause: Did HTML structure change? Is RSS feed still available? Does page require JavaScript?
+4. Fix the scraper (update selectors, switch to RSS, or implement Selenium)
+5. Re-test and verify integration with other scrapers
+
+## Key Dependencies
+
+- **python-telegram-bot**: Async Telegram bot library
+- **beautifulsoup4**: HTML parsing for scraping
+- **requests**: HTTP client (may migrate to aiohttp)
+- **fastapi/uvicorn**: HTTP server for webhook mode
+- **python-dotenv**: Environment variable loading
+- **poetry**: Dependency and environment management
+
+## Notes for Contributors
+
+- All scrapers must be async (use `async def fetch_latest_posts()`)
+- Environment validation happens before Telegram operations to fail fast
+- Dry-run mode exists for local testing — always respect the `dry_run` flag in channels
+- Posts are grouped by date in Telegram messages to reduce spam
+- Markdown formatting is used in Telegram messages — test rendered output
+- When adding new scrapers, refer to the **scraper-ops** skill for intelligent implementation guidance
