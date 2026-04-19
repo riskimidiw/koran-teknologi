@@ -132,6 +132,23 @@ asyncio.run(test())
 
 ## Notes for Contributors
 
+**⚠️ CODE QUALITY: ALWAYS RUN `make lint` AFTER MAKING CODE CHANGES**
+
+After adding or modifying code, immediately run:
+```bash
+make lint      # Check for linting errors (Black, isort, flake8)
+make format    # Auto-format code if lint fails
+```
+
+This ensures code consistency and catches issues early. The linter checks:
+- **Black**: Code formatting and line length
+- **isort**: Import statement organization
+- **flake8**: PEP 8 compliance, complexity, and common errors
+
+Commit only after linting passes.
+
+---
+
 - All scrapers must be async (use `async def fetch_latest_posts()`)
 - Environment validation happens before Telegram operations to fail fast
 - Dry-run mode exists for local testing - always respect the `dry_run` flag in channels

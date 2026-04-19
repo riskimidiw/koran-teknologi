@@ -63,7 +63,7 @@ class AWSArchitectureScraper(BaseScraper):
                             from email.utils import parsedate_to_datetime
 
                             pub_date = parsedate_to_datetime(pub_date_elem.text)
-                        except Exception as e:
+                        except Exception:
                             self.logger.debug(
                                 f"Could not parse date: {pub_date_elem.text}"
                             )

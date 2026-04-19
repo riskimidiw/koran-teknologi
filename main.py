@@ -1,17 +1,18 @@
 """Main entry point for Koran Teknologi."""
 
+import argparse
+import asyncio
+import sys
+
 from dotenv import load_dotenv
 
 # Load environment variables BEFORE any other imports
 load_dotenv()
 
-import argparse
-import asyncio
-import sys
-from cmd.cli import run_cli
-from cmd.http import run_http
+from cmd.cli import run_cli  # noqa: E402
+from cmd.http import run_http  # noqa: E402
 
-from utils.logger import setup_logger
+from utils.logger import setup_logger  # noqa: E402
 
 logger = setup_logger(__name__)
 

@@ -33,7 +33,7 @@ lint: ## Run code quality checks
 	# isort: Specifically handles import sorting and organization
 	@$(POETRY) run isort --check-only --skip .venv .
 	# flake8: Checks for PEP 8 style guide, complexity, and common errors
-	@$(POETRY) run flake8 --ignore=E501 --exclude=.venv .
+	@$(POETRY) run flake8 --ignore=E501,W503 --exclude=.venv .
 
 format: ## Format code with black and isort
 	@echo "$(GREEN)Formatting code...$(NC)"
