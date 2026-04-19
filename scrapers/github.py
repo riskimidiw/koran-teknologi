@@ -1,8 +1,8 @@
 """GitHub AI & ML Blog scraper."""
 
+import re
 from datetime import datetime, timezone
 from typing import List
-import re
 
 from bs4 import BeautifulSoup
 
@@ -68,22 +68,24 @@ class GitHubAIScraper(BaseScraper):
                     # Dates are in format "Month DD, YYYY" within the article
                     all_text = article.get_text()
                     pub_date = None
-                    
+
                     # Try both full and abbreviated month names
                     date_pattern = r"(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2}),?\s+(\d{4})"
                     match = re.search(date_pattern, all_text)
-                    
+
                     if match:
                         date_str = match.group(0)
                         # Normalize format: remove commas
                         date_str = date_str.replace(",", "")
-                        
+
                         try:
                             # Try abbreviated month first
                             pub_date = datetime.strptime(date_str, "%b %d %Y")
                             if pub_date.tzinfo is None:
                                 pub_date = pub_date.replace(tzinfo=timezone.utc)
-                            self.logger.debug(f"Found date '{date_str}' for article '{title[:50]}'")
+                            self.logger.debug(
+                                f"Found date '{date_str}' for article '{title[:50]}'"
+                            )
                         except ValueError:
                             # Try full month name
                             try:
@@ -95,7 +97,9 @@ class GitHubAIScraper(BaseScraper):
 
                     # If no date found, skip this article
                     if not pub_date:
-                        self.logger.debug(f"No date found for article '{title[:50]}', skipping")
+                        self.logger.debug(
+                            f"No date found for article '{title[:50]}', skipping"
+                        )
                         continue
 
                     post = BlogPost(
@@ -111,7 +115,9 @@ class GitHubAIScraper(BaseScraper):
                     self.logger.warning(f"Error parsing article: {str(e)}")
                     continue
 
-            self.logger.info(f"Successfully fetched {len(posts)} posts from GitHub AI Blog")
+            self.logger.info(
+                f"Successfully fetched {len(posts)} posts from GitHub AI Blog"
+            )
 
         except Exception as e:
             self.logger.error(f"Error fetching posts from GitHub AI Blog: {str(e)}")

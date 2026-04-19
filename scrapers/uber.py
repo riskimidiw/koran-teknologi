@@ -94,10 +94,7 @@ class UberScraper(BaseScraper):
                                         "December",
                                     ]
                                 )
-                                or any(
-                                    f"{i} " in tag.get_text()
-                                    for i in range(1, 32)
-                                )
+                                or any(f"{i} " in tag.get_text() for i in range(1, 32))
                             )
                         )
                         container = container.find_parent("div")

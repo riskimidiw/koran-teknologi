@@ -39,13 +39,22 @@ class GoogleResearchScraper(BaseScraper):
 
             # Find all article links - Google Research blog posts are links in specific sections
             all_links = soup.find_all("a", href=lambda x: x and "/blog/" in (x or ""))
-            
+
             self.logger.debug(f"Found {len(all_links)} total links")
 
             month_names = {
-                "january": 1, "february": 2, "march": 3, "april": 4,
-                "may": 5, "june": 6, "july": 7, "august": 8,
-                "september": 9, "october": 10, "november": 11, "december": 12
+                "january": 1,
+                "february": 2,
+                "march": 3,
+                "april": 4,
+                "may": 5,
+                "june": 6,
+                "july": 7,
+                "august": 8,
+                "september": 9,
+                "october": 10,
+                "november": 11,
+                "december": 12,
             }
 
             for link in all_links:
@@ -59,7 +68,7 @@ class GoogleResearchScraper(BaseScraper):
                     # Skip year filter links and other non-article links
                     # Check if URL ends with a 4-digit year (e.g., /blog/2026, /blog/2025, etc.)
                     # This is more future-proof than hardcoding specific years
-                    if re.search(r'/\d{4}$', url):
+                    if re.search(r"/\d{4}$", url):
                         # This is a year filter link, not an article
                         continue
 
@@ -76,21 +85,21 @@ class GoogleResearchScraper(BaseScraper):
                     else:
                         # Fallback to extracting from full text
                         title_text = link.get_text(strip=True)
-                        
+
                         # Extract date using regex pattern
-                        date_pattern = r'^([A-Za-z]+)\s+(\d{1,2}),\s+(\d{4})'
+                        date_pattern = r"^([A-Za-z]+)\s+(\d{1,2}),\s+(\d{4})"
                         match = re.match(date_pattern, title_text)
-                        
+
                         if match:
                             # Get the remaining text after the date
                             date_end_pos = match.end()
                             remaining_text = title_text[date_end_pos:].strip()
-                            
+
                             # Split by "·" to separate title from categories
                             if "·" in remaining_text:
                                 # The first part before the dots
                                 first_part = remaining_text.split("·")[0].strip()
-                                
+
                                 # Look for question mark as end of title
                                 if "?" in first_part:
                                     clean_title = first_part.split("?")[0].strip() + "?"
@@ -111,17 +120,19 @@ class GoogleResearchScraper(BaseScraper):
                     if date_label:
                         date_text = date_label.get_text(strip=True)
                         # Format: "Month DD, YYYY"
-                        date_pattern = r'^([A-Za-z]+)\s+(\d{1,2}),\s+(\d{4})'
+                        date_pattern = r"^([A-Za-z]+)\s+(\d{1,2}),\s+(\d{4})"
                         match = re.match(date_pattern, date_text)
                         if match:
                             month_str = match.group(1).lower()
                             day = int(match.group(2))
                             year = int(match.group(3))
-                            
+
                             if month_str in month_names:
                                 try:
                                     month = month_names[month_str]
-                                    pub_date = datetime(year, month, day, tzinfo=timezone.utc)
+                                    pub_date = datetime(
+                                        year, month, day, tzinfo=timezone.utc
+                                    )
                                 except ValueError:
                                     pass
 
@@ -136,13 +147,17 @@ class GoogleResearchScraper(BaseScraper):
                         source=self.source_name,
                     )
                     posts.append(post)
-                    self.logger.debug(f"Successfully parsed post: {clean_title} ({pub_date.date()})")
+                    self.logger.debug(
+                        f"Successfully parsed post: {clean_title} ({pub_date.date()})"
+                    )
 
                 except Exception as e:
                     self.logger.debug(f"Error parsing link: {str(e)}")
                     continue
 
-            self.logger.info(f"Successfully fetched {len(posts)} posts from Google Research")
+            self.logger.info(
+                f"Successfully fetched {len(posts)} posts from Google Research"
+            )
 
         except Exception as e:
             self.logger.error(f"Error fetching posts from Google Research: {str(e)}")

@@ -23,6 +23,7 @@ SOURCE_EMOJIS = {
     "GitHub": "🐙",
     "Google Research": "🔬",
     "Anthropic": "🧠",
+    "Claude Blog": "🤖",
 }
 
 
@@ -85,10 +86,7 @@ class TelegramChannel:
             posts: List of blog posts from this date
         """
         # Build message with all posts from this day
-        message_lines = [
-            f"📰 *{post_date.strftime('%b %d, %Y')}*",
-            ""
-        ]
+        message_lines = [f"📰 *{post_date.strftime('%b %d, %Y')}*", ""]
 
         # Group by source for better organization
         posts_by_source = defaultdict(list)

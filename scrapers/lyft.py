@@ -30,7 +30,9 @@ class LyftScraper(BaseScraper):
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
             }
 
-            response = self.session.get(rss_url, headers=headers, timeout=10, verify=False)
+            response = self.session.get(
+                rss_url, headers=headers, timeout=10, verify=False
+            )
             response.raise_for_status()
 
             # Parse RSS feed
@@ -84,7 +86,9 @@ class LyftScraper(BaseScraper):
                     self.logger.warning(f"Error parsing Lyft RSS item: {str(e)}")
                     continue
 
-            self.logger.info(f"Successfully fetched {len(posts)} posts from Lyft Engineering")
+            self.logger.info(
+                f"Successfully fetched {len(posts)} posts from Lyft Engineering"
+            )
 
         except Exception as e:
             self.logger.error(f"Error fetching Lyft Engineering blog posts: {str(e)}")

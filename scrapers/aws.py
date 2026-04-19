@@ -84,7 +84,9 @@ class AWSArchitectureScraper(BaseScraper):
                     self.logger.warning(f"Error parsing AWS RSS item: {str(e)}")
                     continue
 
-            self.logger.info(f"Successfully fetched {len(posts)} posts from AWS Architecture")
+            self.logger.info(
+                f"Successfully fetched {len(posts)} posts from AWS Architecture"
+            )
 
         except Exception as e:
             self.logger.error(f"Error fetching AWS Architecture posts: {str(e)}")

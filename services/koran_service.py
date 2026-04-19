@@ -9,6 +9,7 @@ from scrapers.anthropic import AnthropicScraper
 from scrapers.aws import AWSArchitectureScraper
 from scrapers.base_scraper import BlogPost
 from scrapers.bytebytego import ByteByteGoScraper
+from scrapers.claude import ClaudeScraper
 from scrapers.github import GitHubAIScraper
 from scrapers.google_research import GoogleResearchScraper
 from scrapers.lyft import LyftScraper
@@ -33,6 +34,7 @@ class KoranService:
             AnthropicScraper(),
             GitHubAIScraper(),
             GoogleResearchScraper(),
+            ClaudeScraper(),
         ]
         self.channel = TelegramChannel(dry_run=dry_run)
         self.dry_run = dry_run

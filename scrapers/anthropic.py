@@ -1,8 +1,8 @@
 """Anthropic Engineering blog scraper."""
 
+import re
 from datetime import datetime, timezone
 from typing import List
-import re
 
 from bs4 import BeautifulSoup
 
@@ -70,21 +70,25 @@ class AnthropicScraper(BaseScraper):
                     # Look for date pattern: "Mon DD, YYYY" or "Mon DD YYYY"
                     date_pattern = r"(January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+(\d{1,2}),?\s+(\d{4})"
                     match = re.search(date_pattern, all_text)
-                    
+
                     if not match:
-                        self.logger.debug(f"No date found for article '{title_text[:60]}'")
+                        self.logger.debug(
+                            f"No date found for article '{title_text[:60]}'"
+                        )
                         continue
 
                     # Parse the date
                     date_str = match.group(0)
                     # Normalize format: "Mar 25, 2026" or "Mar 25 2026"
                     date_str = date_str.replace(",", "")
-                    
+
                     try:
                         pub_date = datetime.strptime(date_str, "%b %d %Y")
                         pub_date = pub_date.replace(tzinfo=timezone.utc)
                     except ValueError:
-                        self.logger.debug(f"Could not parse date '{date_str}' for article '{title_text[:60]}'")
+                        self.logger.debug(
+                            f"Could not parse date '{date_str}' for article '{title_text[:60]}'"
+                        )
                         continue
 
                     post = BlogPost(
@@ -100,10 +104,14 @@ class AnthropicScraper(BaseScraper):
                     self.logger.warning(f"Error parsing article: {str(e)}")
                     continue
 
-            self.logger.info(f"Successfully fetched {len(posts)} posts from Anthropic Engineering")
+            self.logger.info(
+                f"Successfully fetched {len(posts)} posts from Anthropic Engineering"
+            )
 
         except Exception as e:
-            self.logger.error(f"Error fetching posts from Anthropic Engineering: {str(e)}")
+            self.logger.error(
+                f"Error fetching posts from Anthropic Engineering: {str(e)}"
+            )
             raise
 
         return posts
