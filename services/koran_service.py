@@ -14,6 +14,7 @@ from scrapers.github import GitHubAIScraper
 from scrapers.google_research import GoogleResearchScraper
 from scrapers.lyft import LyftScraper
 from scrapers.netflix import NetflixScraper
+from scrapers.openai import OpenAIScraper
 from scrapers.uber import UberScraper
 from utils.logger import setup_logger
 
@@ -35,6 +36,7 @@ class KoranService:
             GitHubAIScraper(),
             GoogleResearchScraper(),
             ClaudeScraper(),
+            OpenAIScraper(),
         ]
         self.channel = TelegramChannel(dry_run=dry_run)
         self.dry_run = dry_run

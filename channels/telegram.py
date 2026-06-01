@@ -24,6 +24,7 @@ SOURCE_EMOJIS = {
     "Google Research": "🔬",
     "Anthropic": "🧠",
     "Claude Blog": "🤖",
+    "OpenAI": "✨",
 }
 
 
